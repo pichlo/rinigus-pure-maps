@@ -21,24 +21,13 @@ import Sailfish.Silica 1.0
 
 Rectangle {
     id: master
-    anchors.bottom: (app.mode === modes.navigate || app.mode === modes.followMe) ? (app.portrait && app.mode === modes.navigate ? navigationInfoBlock.top : parent.bottom) : menuButton.top
-    anchors.bottomMargin: (app.mode === modes.navigate || app.mode === modes.followMe) ? Theme.paddingSmall : 0
+    anchors.bottom: menuButton.top
     anchors.left: parent.left
     anchors.leftMargin: Theme.paddingLarge
     anchors.right: parent.right
     anchors.rightMargin: Theme.paddingLarge
     color: "transparent"
     height: cover.height
-    states: [
-        State {
-            when: (app.mode === modes.navigate && !app.portrait) || app.mode === modes.followMe
-            AnchorChanges {
-                target: master
-                anchors.left: navigationInfoBlockLandscapeLeftShield.right
-                anchors.right: navigationInfoBlockLandscapeRightShield.left
-            }
-        }
-    ]
     z: 400
 
     Rectangle {

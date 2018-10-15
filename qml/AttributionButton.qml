@@ -22,21 +22,12 @@ import Sailfish.Silica 1.0
 IconButton {
     id: attributionButton
     anchors.left: parent.left
-    anchors.top: navigationBlock.bottom
+    anchors.top: app.portrait ? narrativeLabel.bottom : parent.top
     height: icon.height
     icon.height: icon.sourceSize.height
     icon.smooth: false
     icon.source: app.getIcon("icons/attribution/default")
     icon.width: icon.sourceSize.width
-    states: [
-        State {
-            when: !app.portrait && navigationBlockLandscapeLeftShield.height > 0
-            AnchorChanges {
-                target: attributionButton
-                anchors.top: navigationBlockLandscapeLeftShield.bottom
-            }
-        }
-    ]
     width: icon.width
     z: 500
 

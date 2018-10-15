@@ -19,230 +19,142 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
+import "js/util.js" as Util
+
+// The navigation block comprises two main sections:
+// 1. The progress bar;
+// 2. A multi-purpose display area containing the next maneuver icon
+//    and three configurable zones.
+// Depending on the screen orientation, the sections are laid out
+// either top to bottom or left to right.
+// The multi-purpose display is equally laid out left to right (in portrait)
+// or top to bottom (in landscape).
+
 Rectangle {
     id: block
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: parent.top
+    width: hasRoute ? (app.portrait ? app.screenWidth : (progressBar.width + displayArea.width)) : 0
+    height: hasRoute ? (app.portrait ? (progressBar.height + displayArea.height) : app.screenHeight) : 0
     color: app.styler.blockBg
-    height: {
-        if (!destDist) return 0;
-        if (!app.portrait && notify) {
-            var h1 = Theme.paddingMedium + Theme.fontSizeLarge - Theme.fontSizeMedium + narrativeLabel.height;
-            var h2 = Theme.paddingMedium + destLabel.height;
-            var h3 = streetLabel.height;
-            return Math.max(h1, h2, h3);
-        } else {
-            var h1 = iconImage.height + 2 * Theme.paddingLarge;
-            var h2 = manLabel.height + Theme.paddingSmall + narrativeLabel.height;
-            var h3 = manLabel.height + streetLabel.height;
-            // If far off route, manLabel defines the height of the block,
-            // but we need padding to make a sufficiently large tap target.
-            var h4 = notify ? 0 : manLabel.height + Theme.paddingMedium;
-            return Math.max(h1, h2, h3, h4);
+
+    property string destDist: app.navigationStatus.destDist
+    property string destEta:  app.navigationStatus.destEta
+    property string destTime: app.navigationStatus.destTime
+    property string icon:     app.navigationStatus.icon
+    property string manDist:  app.navigationStatus.manDist
+    property string manTime:  app.navigationStatus.manTime
+    property bool   hasRoute: map.hasRoute
+
+    Grid {
+        columns: app.portrait ? 1 : 2
+        rows: app.portrait ? 2 : 1
+
+        Rectangle {
+            // Section one, the progress bar
+            // Placed along the top or the left side of the screen
+            id: progressBar
+            width: block.hasRoute ? (app.portrait ? app.screenWidth : Theme.paddingSmall) : 0
+            height: block.hasRoute ? (app.portrait ? Theme.paddingSmall : app.screenHeight) : 0
+            // Draw a shaded background
+            color: Theme.primaryColor
+            opacity: 0.1
+
+            Rectangle {
+                id: progressComplete
+                anchors.left: parent.left
+                color: Theme.primaryColor
+                radius: Theme.paddingSmall / 2
+                states: [
+                    State {
+                        when: app.portrait
+                        AnchorChanges {
+                            target: progressComplete
+                            anchors.top: parent.top
+                            anchors.bottom: undefined
+                        }
+                        PropertyChanges {
+                            target: progressComplete
+                            height: parent.height
+                            width: app.navigationStatus.progress * displayArea.width
+                        }
+                    },
+                    State {
+                        when: !app.portrait
+                        AnchorChanges {
+                            target: progressComplete
+                            anchors.top: undefined
+                            anchors.bottom: parent.bottom
+                        }
+                        PropertyChanges {
+                            target: progressComplete
+                            height: app.navigationStatus.progress * displayArea.height
+                            width: parent.width
+                        }
+                    }
+                ]
+            }
         }
-    }
-    states: [
-        State {
-            when: !app.portrait && destDist && notify
-            AnchorChanges {
-                target: block
-                anchors.left: undefined
+
+        Grid {
+            // Section two, display area, split into: maneuver icon and three display zones
+            // Placed immediately below (or to the right of) the progress bar
+            id: displayArea
+            columns: app.portrait ? 4 : 1
+            rows: app.portrait ? 1 : 4
+            height: app.portrait
+                        ? Math.max(iconImage.height, zoneA.height, zoneB.height, zoneC.height)
+                        : app.screenHeight
+            width: app.portrait ? app.screenWidth : calculatedWidth
+
+            // The display area comprises a next maneuver icon and three information zones,
+            // lined up side by side or top to bottom.
+            // Here, we work out what each zone's width would be in portrait and save it
+            // to use in both portrait and landscape, when elements are stocked vertically.
+            property real calculatedWidth: app.portrait
+                                               ? (app.screenWidth - iconImage.sourceSize.width) / 3
+                                               : (app.screenHeight - iconImage.sourceSize.width) / 3 + (Theme.paddingMedium * 2)
+
+            Image {
+                // Icon for the next maneuver
+                id: iconImage
+                anchors.leftMargin: Theme.paddingSmall
+                anchors.rightMargin: Theme.paddingSmall
+                anchors.topMargin: Theme.paddingSmall
+                anchors.bottomMargin: Theme.paddingSmall
+                fillMode: Image.Pad
+                smooth: true
+                source: block.hasRoute ? "icons/navigation/%1.svg".arg(block.icon || "flag") : ""
+                sourceSize.height: (Screen.sizeCategory >= Screen.Large ? 1.7 : 1) * Theme.iconSizeLarge
+                sourceSize.width: (Screen.sizeCategory >= Screen.Large ? 1.7 : 1) * Theme.iconSizeLarge
+                height: sourceSize.height
+                width: app.portrait ? sourceSize.width : parent.calculatedWidth
             }
-            PropertyChanges {
-                target: block
-                width: parent.width - shieldLeftWidth
+
+            NavigationBlockElement {
+                // Left (or top) area, e.g. a distance to the next maneuver
+                id: zoneA
+                width: parent.calculatedWidth
+                height: implicitHeight + (app.portrait ? 0 : (app.screenHeight - iconImage.height - 3 * implicitHeight - Theme.paddingLarge) / 2)
+                value: token(block.manDist, " ", 0)
+                caption: long_word_distance(token(block.manDist, " ", 1))
+            }
+
+            NavigationBlockElement {
+                // Middle area, e.g. current speed
+                id: zoneB
+                width: parent.calculatedWidth
+                height: zoneA.height
+                value: speed_value()
+                caption: speed_unit()
+            }
+
+            NavigationBlockElement {
+                // Right (or bottom) area, e.g. a distance to the destination or ETA
+                id: zoneC
+                width: parent.calculatedWidth
+                value: block.destEta
+                caption: app.tr("ETA")
             }
         }
-    ]
-    z: 500
-
-    property string destDist:  app.navigationStatus.destDist
-    property string destEta:   app.navigationStatus.destEta
-    property string destTime:  app.navigationStatus.destTime
-    property string icon:      app.navigationStatus.icon
-    property string manDist:   app.navigationStatus.manDist
-    property string manTime:   app.navigationStatus.manTime
-    property string narrative: app.navigationStatus.narrative
-    property bool   notify:    app.navigationStatus.notify
-    property var    street:    app.navigationStatus.street
-    property int    shieldLeftHeight: !app.portrait && destDist && notify ? manLabel.height + Theme.paddingMedium + iconImage.height + iconImage.anchors.topMargin : 0
-    property int    shieldLeftWidth:  !app.portrait && destDist && notify ? manLabel.anchors.leftMargin + Theme.paddingLarge + Math.max(manLabel.width, iconImage.width) : 0
-
-    Label {
-        // Distance remaining to the next maneuver
-        id: manLabel
-        anchors.left: iconImage.right
-        anchors.leftMargin: iconImage.width > 0 || !app.portrait ? (app.portrait ? Theme.paddingLarge : Theme.horizontalPageMargin) : 0
-        anchors.rightMargin: Theme.paddingLarge
-        anchors.top: parent.top
-        color: block.notify ? Theme.highlightColor : Theme.primaryColor
-        font.family: block.notify ? Theme.fontFamilyHeading : Theme.fontFamily
-        font.pixelSize: block.notify ? Theme.fontSizeHuge : Theme.fontSizeMedium
-        height: block.destDist ? implicitHeight + Theme.paddingMedium : 0
-        text: block.manDist
-        verticalAlignment: Text.AlignBottom
-        states: [
-            State {
-                when: !app.portrait && block.destDist && block.notify
-                AnchorChanges {
-                    target: manLabel
-                    anchors.left: undefined
-                    anchors.right: parent.left
-                    anchors.top: iconImage.bottom
-                }
-            }
-        ]
-    }
-
-    Label {
-        // Estimated time of arrival
-        id: destLabel
-        anchors.baseline: manLabel.baseline
-        anchors.right: parent.right
-        anchors.rightMargin: Theme.horizontalPageMargin
-        color: Theme.primaryColor
-        font.pixelSize: Theme.fontSizeLarge
-        height: block.destDist ? implicitHeight + Theme.paddingMedium : 0
-        text: block.notify ? block.destEta : ""
-        states: [
-            State {
-                when: !app.portrait && streetLabel.text
-                AnchorChanges {
-                    target: destLabel
-                    anchors.baseline: streetLabel.baseline
-                }
-            },
-            State {
-                when: !app.portrait
-                AnchorChanges {
-                    target: destLabel
-                    anchors.baseline: undefined
-                    anchors.top: parent.top
-                }
-                PropertyChanges {
-                    target: destLabel
-                    verticalAlignment: Text.AlignBottom
-                }
-            }
-        ]
-    }
-
-    Label {
-        // Estimated time of arrival: ETA label
-        id: destEta
-        anchors.baseline: destLabel.baseline
-        anchors.right: destLabel.left
-        anchors.rightMargin: Theme.paddingSmall
-        color: Theme.secondaryColor
-        font.pixelSize: Theme.fontSizeMedium
-        text: app.tr("ETA")
-        visible: block.notify
-    }
-
-    Label {
-        // Street name
-        id: streetLabel
-        anchors.left: iconImage.right
-        anchors.leftMargin: iconImage.width > 0 ? Theme.paddingLarge : 0
-        anchors.right: parent.right
-        anchors.rightMargin: app.portrait ? Theme.horizontalPageMargin : Theme.paddingLarge
-        anchors.top: manLabel.bottom
-        color: Theme.primaryColor
-        font.pixelSize: Theme.fontSizeExtraLarge
-        height: text ? implicitHeight + Theme.paddingMedium : 0
-        maximumLineCount: 1
-        states: [
-            State {
-                when: !app.portrait
-                AnchorChanges {
-                    target: streetLabel
-                    anchors.left: iconImage.width > manLabel.width ? iconImage.right : manLabel.right
-                    anchors.right: destEta.left
-                    anchors.top: parent.top
-                }
-            }
-        ]
-        text: app.navigationPageSeen && block.notify ? streetName : ""
-        truncationMode: TruncationMode.Fade
-        verticalAlignment: Text.AlignTop
-
-        property string streetName: {
-            if (!block.street) return "";
-            var s = "";
-            for (var i in block.street) {
-                if (s != "") s += "; "
-                s += block.street[i];
-            }
-            return s;
-        }
-    }
-
-    Label {
-        // Instruction text for the next maneuver
-        id: narrativeLabel
-        anchors.left: iconImage.right
-        anchors.leftMargin: iconImage.width > 0 ? Theme.paddingLarge : 0
-        anchors.right: parent.right
-        anchors.rightMargin: app.portrait ? Theme.horizontalPageMargin : Theme.paddingLarge
-        anchors.top: manLabel.bottom
-        anchors.topMargin: Theme.paddingSmall
-        color: Theme.primaryColor
-        font.pixelSize: Theme.fontSizeMedium
-        height: text ? implicitHeight + Theme.paddingMedium : 0
-        states: [
-            State {
-                when: !app.portrait
-                AnchorChanges {
-                    target: narrativeLabel
-                    anchors.baseline: destLabel.baseline
-                    anchors.left: iconImage.width > manLabel.width ? iconImage.right : manLabel.right
-                    anchors.right: destEta.left
-                    anchors.top: undefined
-                }
-            }
-        ]
-        text: app.navigationPageSeen ?
-            (block.notify && !streetLabel.text ? block.narrative : "") :
-            (block.notify ? app.tr("Tap to review maneuvers or begin navigating") : "")
-        verticalAlignment: Text.AlignTop
-        wrapMode: Text.WordWrap
-    }
-
-    Image {
-        // Icon for the next maneuver
-        id: iconImage
-        anchors.left: parent.left
-        anchors.leftMargin: Theme.horizontalPageMargin
-        anchors.rightMargin: Theme.paddingLarge
-        anchors.top: parent.top
-        anchors.topMargin: height ? Theme.paddingLarge : 0
-        fillMode: Image.Pad
-        height: block.notify ? sourceSize.height : 0
-        opacity: 0.9
-        smooth: true
-        source: block.notify ? "icons/navigation/%1.svg".arg(block.icon || "flag") : ""
-        sourceSize.height: (Screen.sizeCategory >= Screen.Large ? 1.7 : 1) * Theme.iconSizeLarge
-        sourceSize.width: (Screen.sizeCategory >= Screen.Large ? 1.7 : 1) * Theme.iconSizeLarge
-        states: [
-            State {
-                when: !app.portrait && block.destDist && block.notify && iconImage.width < manLabel.width
-                AnchorChanges {
-                    target: iconImage
-                    anchors.left: undefined
-                    anchors.horizontalCenter: manLabel.horizontalCenter
-                }
-            },
-            State {
-                when: !app.portrait && block.destDist && block.notify
-                AnchorChanges {
-                    target: iconImage
-                    anchors.left: undefined
-                    anchors.right: parent.right
-                }
-            }
-        ]
-        width: block.notify ? sourceSize.width : 0
     }
 
     MouseArea {
@@ -250,4 +162,44 @@ Rectangle {
         onClicked: app.showNavigationPages();
     }
 
+    function token(s, t, n) {
+        var result = "";
+        for (var i in s) {
+            if (s[i] == t) {
+                --n;
+            } else if (n == 0) {
+                result += s[i];
+            }
+        }
+        return result;
+    }
+
+    function long_word_distance(s) {
+        return (s == app.tr("ft")) ? app.tr("feet")   :
+               (s == app.tr("yd")) ? app.tr("yards")  :
+               (s == app.tr("m"))  ? app.tr("meters") :
+               (s == app.tr("mi")) ? app.tr("miles")  : s;
+    }
+
+    function speed_value() {
+        if (!py.ready) {
+            return "";
+        } else if (!gps.position.speedValid) {
+            return "—";
+        } else if (app.conf.get("units") === "metric") {
+            return Util.siground(gps.position.speed * 3.6, 2);
+        } else {
+            return Util.siground(gps.position.speed * 2.23694, 2);
+        }
+    }
+
+    function speed_unit() {
+        if (!py.ready) {
+            return "";
+        } else if (app.conf.get("units") === "metric") {
+            return app.tr("km/h");
+        } else {
+            return app.tr("mph");
+        }
+    }
 }

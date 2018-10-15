@@ -25,21 +25,11 @@ Rectangle {
     anchors.left: parent.left
     anchors.leftMargin: Theme.paddingLarge
     anchors.bottomMargin: Theme.paddingLarge
-    anchors.bottom: streetName.top
     border.width: 0.7*Theme.paddingLarge
     border.color: "red"
     color: "white"
     height: width
     radius: width/2
-    states: [
-        State {
-            when: (!app.portrait || app.mode === modes.followMe) && navigationInfoBlockLandscapeLeftShield.height > 0
-            AnchorChanges {
-                target: ring
-                anchors.bottom: navigationInfoBlockLandscapeLeftShield.top
-            }
-        }
-    ]
     width: Math.round(Math.max(limit.width,limit.height) + 1.6*Theme.paddingLarge + Theme.paddingSmall)
     visible: {
         if (app.mode === modes.explore || !map.route || map.route.mode !== "car" || app.conf.showSpeedLimit==="never")
@@ -53,6 +43,25 @@ Rectangle {
         return limit.text.length > 0
     }
     z: 400
+
+    states: [
+        State {
+            when: app.portrait
+            AnchorChanges {
+                target: ring
+                anchors.bottom: streetName.top
+                anchors.verticalCenter: undefined
+            }
+        },
+        State {
+            when: !app.portrait
+            AnchorChanges {
+                target: ring
+                anchors.bottom: undefined
+                anchors.verticalCenter: streetName.verticalCenter
+            }
+        }
+    ]
 
     Text {
         id: limit
@@ -98,5 +107,4 @@ Rectangle {
             }
         }
     }
-
 }

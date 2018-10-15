@@ -23,13 +23,14 @@ import "js/util.js" as Util
 
 Item {
     id: meters
-    anchors.right: northArrow.left
-    anchors.rightMargin: Theme.paddingSmall
-    anchors.verticalCenter: northArrow.verticalCenter
+    anchors.right: parent.right
+    anchors.rightMargin: Theme.paddingLarge
+    anchors.bottom: parent.bottom
+    anchors.bottomMargin: Theme.paddingLarge
     height: labels.implicitHeight
     opacity: 0.9
     width: parent.width
-    visible: app.mode === modes.explore && !app.poiActive
+    visible: !app.poiActive
     z: 400
 
     Text {
@@ -71,7 +72,7 @@ Item {
         if (app.conf.units === "american") {
             labels.text = " %1\n %2".arg(app.tr("mph")).arg(app.tr("ft"))
             if (gps.position.speedValid)
-                lines[0] = Math.round(gps.position.speed * 2.23694);
+                lines[0] = Util.siground(gps.position.speed * 2.23694, 2);
             if (gps.position.horizontalAccuracyValid)
                 lines[1] = Util.siground(gps.position.horizontalAccuracy * 3.28084, 2);
             lines[1] = "\u2300 %1".arg(lines[1]);
@@ -81,7 +82,7 @@ Item {
         } else if (app.conf.units === "british") {
             labels.text = " %1\n %2".arg(app.tr("mph")).arg(app.tr("yd"))
             if (gps.position.speedValid)
-                lines[0] = Math.round(gps.position.speed * 2.23694);
+                lines[0] = Util.siground(gps.position.speed * 2.23694, 2);
             if (gps.position.horizontalAccuracyValid)
                 lines[1] = Util.siground(gps.position.horizontalAccuracy * 1.09361, 2);
             lines[1] = "\u2300 %1".arg(lines[1]);
@@ -91,7 +92,7 @@ Item {
         } else {
             labels.text = " %1\n %2".arg(app.tr("km/h")).arg(app.tr("m"))
             if (gps.position.speedValid)
-                lines[0] = Math.round(gps.position.speed * 3.6);
+                lines[0] = Util.siground(gps.position.speed * 3.6, 2);
             if (gps.position.horizontalAccuracyValid)
                 lines[1] = Util.siground(gps.position.horizontalAccuracy, 2);
             lines[1] = "\u2300 %1".arg(lines[1]);
@@ -100,5 +101,4 @@ Item {
 
         }
     }
-
 }

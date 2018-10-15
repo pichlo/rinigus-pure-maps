@@ -26,7 +26,8 @@ import "js/util.js" as Util
 
 MapboxMap {
     id: map
-    anchors.fill: parent
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
     cacheDatabaseDefaultPath: true
     cacheDatabaseStoreSettings: false
     center: QtPositioning.coordinate(49, 13)
@@ -40,8 +41,27 @@ MapboxMap {
     pixelRatio: Theme.pixelRatio * 1.5
     zoomLevel: 4.0
 
+    states: [
+        State {
+            when: app.portrait
+            AnchorChanges {
+                target: map
+                anchors.top: navigationBlock.bottom
+                anchors.left: parent.left
+            }
+        },
+        State {
+            when: !app.portrait
+            AnchorChanges {
+                target: map
+                anchors.top: parent.top
+                anchors.left: navigationBlock.right
+            }
+        }
+    ]
+
     // Token for Mapbox.com-hosted maps, i.e. sources with mapbox:// URLs.
-    accessToken: "#MAPBOX_KEY#"
+    accessToken: "pk.eyJ1IjoicmluaWd1cyIsImEiOiJjamxiMWF2N3gxNDI4M2ttdHNsYWxoOGFyIn0.0znRguypZfUcijqfBFyP3g"
 
     property bool   autoCenter: false
     property bool   autoRotate: false
@@ -143,11 +163,6 @@ MapboxMap {
     }
 
     Connections {
-        target: navigationInfoBlock
-        onHeightChanged: map.updateMargins();
-    }
-
-    Connections {
         target: poiPanel
         onHeightChanged: map.updateMargins();
     }
@@ -219,7 +234,7 @@ MapboxMap {
 
     function _addPoi(poi) {
         if (hasPoi(poi)) return false; // avoid duplicates
-        // Add new POI marker to the map.        
+        // Add new POI marker to the map.
         map.pois.push({
             "address": poi.address || "",
             "bookmarked": poi.bookmarked || false,
@@ -673,7 +688,6 @@ MapboxMap {
         // Calculate new margins and set them for the map.
         var header = navigationBlock && navigationBlock.height > 0 ? navigationBlock.height : map.height*0.05;
         var footer = !app.poiActive && app.mode === modes.explore && menuButton ? (map.height-menuButton.y) : 0;
-        footer += !app.poiActive && (app.mode === modes.navigate || app.mode === modes.followMe) && app.portrait && navigationInfoBlock ? navigationInfoBlock.height : 0;
         footer += !app.poiActive && (app.mode === modes.navigate || app.mode === modes.followMe) && streetName ? streetName.height : 0
         footer += app.poiActive && poiPanel ? poiPanel.height : 0
         footer = Math.min(footer, map.height / 2.0);
