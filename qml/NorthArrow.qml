@@ -22,7 +22,7 @@ import "."
 
 IconButton {
     id: master
-    anchors.top: centerButton.bottom
+    anchors.bottom: parent.bottom
     anchors.horizontalCenter: centerButton.horizontalCenter
     height: icon.height
     icon.height: icon.sourceSize.height
