@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import Sailfish.Silica 1.0
+import "platform"
 
 import "js/util.js" as Util
 
@@ -29,25 +29,25 @@ Rectangle {
                ? (app.portrait ? app.screenWidth : app.screenHeight)
                : 0
     height: notify ? narrativeLabelText.height : 0
-    radius: app.portrait ? 0 : Theme.paddingMedium
+    radius: app.portrait ? 0 : app.styler.themePaddingMedium
     color: app.styler.blockBg
 
     property bool   notify:    app.navigationStatus.notify
     property string narrative: app.navigationStatus.narrative
     property var    street:    app.navigationStatus.street
 
-    Label {
+    LabelPL {
         id: narrativeLabelText
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.leftMargin: Theme.paddingLarge
-        anchors.rightMargin: Theme.paddingLarge
-        color: Theme.primaryColor
-        font.pixelSize: streetNameShown ? Theme.fontSizeExtraLarge : Theme.fontSizeMedium
-        height: text ? implicitHeight + Theme.paddingMedium : 0
+        anchors.leftMargin: app.styler.themePaddingLarge
+        anchors.rightMargin: app.styler.themePaddingLarge
+        color: app.styler.themePrimaryColor
+        font.pixelSize: streetNameShown ? app.styler.themeFontSizeExtraLarge : app.styler.themeFontSizeMedium
+        height: text ? implicitHeight + app.styler.themePaddingMedium : 0
         maximumLineCount: streetNameShown ? 1 : 2
-        truncationMode: TruncationMode.Fade
+        truncMode: truncModes.fade
         text: block.notify
                   ? (app.navigationPageSeen
                          ? (block.street ? streetName : block.narrative)

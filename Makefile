@@ -1,15 +1,18 @@
 # -*- coding: us-ascii-unix -*-
 
 NAME       = harbour-pure-maps
-VERSION    = 1.7.1
+VERSION    = 1.8.0
 RELEASE    = $(NAME)-$(VERSION)
 DESTDIR    =
 PREFIX     = /usr
+EXEDIR     = $(DESTDIR)$(PREFIX)/bin
+EXE        = $(EXEDIR)/$(NAME)
 DATADIR    = $(DESTDIR)$(PREFIX)/share/$(NAME)
 DESKTOPDIR = $(DESTDIR)$(PREFIX)/share/applications
 ICONDIR    = $(DESTDIR)$(PREFIX)/share/icons/hicolor
 LANGS      = $(basename $(notdir $(wildcard po/*.po)))
 LCONVERT   = $(or $(wildcard /usr/lib/qt5/bin/lconvert),\
+                  $(wildcard /bin/lconvert),\
                   $(wildcard /usr/lib/*/qt5/bin/lconvert))
 
 define install-translation =
@@ -43,6 +46,10 @@ dist:
 	tools/manage-keys inject dist/$(RELEASE)
 	tar -C dist -cJf dist/$(RELEASE).tar.xz $(RELEASE)
 
+flatpak:
+	flatpak-builder --repo=../flatpak --force-clean ../build-dir packaging/flatpak/io.github.rinigus.PureMaps.json
+	flatpak build-bundle ../flatpak pure-maps.flatpak io.github.rinigus.PureMaps
+
 install:
 	@echo "Installing Python files..."
 	mkdir -p $(DATADIR)/poor
@@ -61,6 +68,8 @@ install:
 	cp qml/icons/navigation/*.svg $(DATADIR)/qml/icons/navigation
 	mkdir -p $(DATADIR)/qml/js
 	cp qml/js/*.js $(DATADIR)/qml/js
+	mkdir -p $(DATADIR)/qml/platform
+	cp qml/platform/*.qml $(DATADIR)/qml/platform
 	@echo "Installing maps..."
 	mkdir -p $(DATADIR)/maps
 	cp maps/*.json $(DATADIR)/maps
@@ -89,7 +98,7 @@ install:
 	$(foreach lang,$(LANGS),$(call install-translation,$(lang)))
 	@echo "Installing desktop file..."
 	mkdir -p $(DESKTOPDIR)
-	cp data/$(NAME).desktop $(DESKTOPDIR)
+	cp data/$(NAME).desktop $(DESKTOPDIR) || true
 	@echo "Installing icons..."
 	mkdir -p $(ICONDIR)/86x86/apps
 	mkdir -p $(ICONDIR)/108x108/apps
@@ -100,10 +109,19 @@ install:
 	cp data/pure-maps-128.png $(ICONDIR)/128x128/apps/$(NAME).png
 	cp data/pure-maps-256.png $(ICONDIR)/256x256/apps/$(NAME).png
 
+platform-qtcontrols:
+	rm qml/platform || true
+	ln -s platform.qtcontrols qml/platform
+
+platform-silica:
+	rm qml/platform || true
+	ln -s platform.silica qml/platform
+
 pot:
 	tools/update-translations
 
-rpm:
+rpm-silica:
+	$(MAKE) platform-silica
 	$(MAKE) dist
 	mkdir -p $$HOME/rpmbuild/SOURCES
 	cp dist/$(RELEASE).tar.xz $$HOME/rpmbuild/SOURCES

@@ -17,33 +17,33 @@
  */
 
 import QtQuick 2.0
-import Sailfish.Silica 1.0
+import "platform"
 
 Column {
-    anchors.leftMargin: Theme.paddingSmall
-    anchors.rightMargin: Theme.paddingSmall
+    anchors.leftMargin: app.styler.themePaddingSmall
+    anchors.rightMargin: app.styler.themePaddingSmall
 
     property string value
     property string caption
 
-    Label {
+    LabelPL {
         // Value
         anchors.left: parent.left
         anchors.right: parent.right
-        color: Theme.highlightColor
-        font.pixelSize: Theme.fontSizeHuge
+        color: app.styler.themeHighlightColor
+        font.pixelSize: app.styler.themeFontSizeHuge
         height: implicitHeight * 3 / 4  // text is always a number, we can get away without the part below baseline
         verticalAlignment: Text.AlignTop
         horizontalAlignment: Text.AlignHCenter
         text: value     // assigned by the caller
     }
 
-    Label {
+    LabelPL {
         // Caption
         anchors.left: parent.left
         anchors.right: parent.right
-        color: Theme.highlightColor
-        font.pixelSize: Theme.fontSizeMedium
+        color: app.styler.themeHighlightColor
+        font.pixelSize: app.styler.themeFontSizeMedium
         verticalAlignment: Text.AlignBottom
         horizontalAlignment: Text.AlignHCenter
         text: caption   // assigned by the caller

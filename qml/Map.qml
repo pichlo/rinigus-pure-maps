@@ -18,7 +18,6 @@
 
 import QtQuick 2.0
 import QtPositioning 5.3
-import Sailfish.Silica 1.0
 import MapboxMap 1.0
 import "."
 
@@ -38,7 +37,7 @@ MapboxMap {
         if (app.mode === modes.followMe) return 60;
         return 0; // should never get here
     }
-    pixelRatio: Theme.pixelRatio * 1.5
+    pixelRatio: app.styler.themePixelRatio * 1.5
     zoomLevel: 4.0
 
     states: [
@@ -61,7 +60,7 @@ MapboxMap {
     ]
 
     // Token for Mapbox.com-hosted maps, i.e. sources with mapbox:// URLs.
-    accessToken: "pk.eyJ1IjoicmluaWd1cyIsImEiOiJjamxiMWF2N3gxNDI4M2ttdHNsYWxoOGFyIn0.0znRguypZfUcijqfBFyP3g"
+    accessToken: "#MAPBOX_KEY#"
 
     property bool   autoCenter: false
     property bool   autoRotate: false
@@ -649,7 +648,7 @@ MapboxMap {
 
     function setScale(scale) {
         // Set the map scaling via its pixel ratio.
-        map.pixelRatio = Theme.pixelRatio * 1.5 * scale;
+        map.pixelRatio = app.styler.themePixelRatio * 1.5 * scale;
         map.configureLayers();
         positionMarker.configureLayers();
     }

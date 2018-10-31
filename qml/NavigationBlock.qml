@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import Sailfish.Silica 1.0
+import "platform"
 
 import "js/util.js" as Util
 
@@ -52,17 +52,17 @@ Rectangle {
             // Section one, the progress bar
             // Placed along the top or the left side of the screen
             id: progressBar
-            width: block.hasRoute ? (app.portrait ? app.screenWidth : Theme.paddingSmall) : 0
-            height: block.hasRoute ? (app.portrait ? Theme.paddingSmall : app.screenHeight) : 0
+            width: block.hasRoute ? (app.portrait ? app.screenWidth : app.styler.themePaddingSmall) : 0
+            height: block.hasRoute ? (app.portrait ? app.styler.themePaddingSmall : app.screenHeight) : 0
             // Draw a shaded background
-            color: Theme.primaryColor
+            color: app.styler.themePrimaryColor
             opacity: 0.1
 
             Rectangle {
                 id: progressComplete
                 anchors.left: parent.left
-                color: Theme.primaryColor
-                radius: Theme.paddingSmall / 2
+                color: app.styler.themePrimaryColor
+                radius: app.styler.themePaddingSmall / 2
                 states: [
                     State {
                         when: app.portrait
@@ -111,20 +111,20 @@ Rectangle {
             // to use in both portrait and landscape, when elements are stocked vertically.
             property real calculatedWidth: app.portrait
                                                ? (app.screenWidth - iconImage.sourceSize.width) / 3
-                                               : (app.screenHeight - iconImage.sourceSize.width) / 3 + (Theme.paddingMedium * 2)
+                                               : (app.screenHeight - iconImage.sourceSize.width) / 3 + (app.styler.themePaddingMedium * 2)
 
             Image {
                 // Icon for the next maneuver
                 id: iconImage
-                anchors.leftMargin: Theme.paddingSmall
-                anchors.rightMargin: Theme.paddingSmall
-                anchors.topMargin: Theme.paddingSmall
-                anchors.bottomMargin: Theme.paddingSmall
+                anchors.leftMargin: app.styler.themePaddingSmall
+                anchors.rightMargin: app.styler.themePaddingSmall
+                anchors.topMargin: app.styler.themePaddingSmall
+                anchors.bottomMargin: app.styler.themePaddingSmall
                 fillMode: Image.Pad
                 smooth: true
-                source: block.hasRoute ? "icons/navigation/%1.svg".arg(block.icon || "flag") : ""
-                sourceSize.height: (Screen.sizeCategory >= Screen.Large ? 1.7 : 1) * Theme.iconSizeLarge
-                sourceSize.width: (Screen.sizeCategory >= Screen.Large ? 1.7 : 1) * Theme.iconSizeLarge
+                source: block.hasRoute ? "icons/navigation/%1-%2.svg".arg(block.icon || "flag").arg(app.styler.navigationIconsVariant) : ""
+                sourceSize.height: (app.screenLarge ? 1.7 : 1) * app.styler.themeIconSizeLarge
+                sourceSize.width: (app.screenLarge ? 1.7 : 1) * app.styler.themeIconSizeLarge
                 height: sourceSize.height
                 width: app.portrait ? sourceSize.width : parent.calculatedWidth
             }
@@ -133,7 +133,7 @@ Rectangle {
                 // Left (or top) area, e.g. a distance to the next maneuver
                 id: zoneA
                 width: parent.calculatedWidth
-                height: implicitHeight + (app.portrait ? 0 : (app.screenHeight - iconImage.height - 3 * implicitHeight - Theme.paddingLarge) / 2)
+                height: implicitHeight + (app.portrait ? 0 : (app.screenHeight - iconImage.height - 3 * implicitHeight - app.styler.themePaddingLarge) / 2)
                 value: token(block.manDist, " ", 0)
                 caption: long_word_distance(token(block.manDist, " ", 1))
             }
@@ -202,4 +202,5 @@ Rectangle {
             return app.tr("mph");
         }
     }
+
 }

@@ -17,11 +17,10 @@
  */
 
 import QtQuick 2.0
-import Sailfish.Silica 1.0
+import "platform"
 
-Page {
+PageEmptyPL {
     id: page
-    allowedOrientations: app.defaultAllowedOrientations
 
     NavigationBlock { id: navigationBlock }
     Map {
@@ -41,11 +40,12 @@ Page {
         StreetName { id: streetName }
         ZoomLevel { id: zoomLevel }
     }
-    RemorsePopup { id: remorse; z: 1000 }
+    RemorsePopupPL { id: remorse; z: 1000 }
 
     Component.onCompleted: {
         app.map = map;
         app.notification = notification;
         app.remorse = remorse;
     }
+
 }
